@@ -24,7 +24,7 @@
     "hypermedia"
   ],
   "author": "globz",
-  "license": "ISC",
+  "license": "MIT",
   "packageManager": "pnpm@10.18.1",
   "devDependencies": {
     "@types/node": "^24.7.0",
