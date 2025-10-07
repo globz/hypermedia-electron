@@ -1,0 +1,36 @@
+{
+  "name": "hypermedia-electron",
+  "version": "1.0.0",
+  "description": "Hypermedia for Electron ~ Built for SSR and htmx",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+   ".": {
+     "types": "./dist/index.d.ts",
+     "require": "./dist/index.js",
+     "import": "./dist/index.es.js"
+   }
+  },
+  "scripts": {
+    "build": "tsc && vite build",
+    "dev": "tsc && vite build --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "electron",
+    "ssr",
+    "server-sent-events",
+    "hypermedia"
+  ],
+  "author": "globz",
+  "license": "ISC",
+  "packageManager": "pnpm@10.18.1",
+  "devDependencies": {
+    "@types/node": "^24.7.0",
+    "electron": "^38.2.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.9",
+    "vite-plugin-dts": "^4.5.4"
+  }
+}
