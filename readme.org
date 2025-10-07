@@ -47,10 +47,11 @@
 
 If you wish to add this package to your project do the following:
 
-#+NAME: Build, Package & Add
+#+NAME: Install, Build, Package & Add
 #+begin_src bash
 git clone https://github.com/globz/hypermedia-electron.git
 cd hypermedia-electron
+pnpm install
 pnpm build
 pnpm pack
 cd /path/to/your/project
