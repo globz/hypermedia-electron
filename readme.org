@@ -9,7 +9,7 @@
   No running server or port opening required and no need to manually handle IPC
   communication.
 
-  This package is heavily inspired by https://github.com/StreamUI/ssr-electron
+  This package is based on the original work made by https://github.com/StreamUI/ssr-electron
 
   I do not wish to publish this on npm since the original solution already
   exist. This is simply my own private package for personal use with some
