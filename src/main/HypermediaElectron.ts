@@ -1,25 +1,25 @@
 import { Protocol, protocol as electronProtocol, app } from 'electron';
 import { PassThrough, Readable } from 'stream';
 import {
-	ElectronSSROptions,
+	HypermediaElectronOptions,
 	RouteHandler,
 	SSEConnection
 } from './types';
 
 /**
- * ElectronSSR - A bridge for SSR-like functionality in Electron using HTMX and SSE
+ * HypermediaElectron - A bridge for SSR-like functionality in Electron
  */
-export class ElectronSSR {
-	private options: ElectronSSROptions;
+export class HypermediaElectron {
+	private options: HypermediaElectronOptions;
 	private initialized: boolean = false;
 	private routes: Map<string, RouteHandler> = new Map();
 	private _sseConnections: Set<SSEConnection> = new Set();
 	private schemesRegistered: boolean = false;
 
 	/**
-	 * Create a new ElectronSSR instance
+	 * Create a new HypermediaElectron instance
 	 */
-	constructor(options: ElectronSSROptions = {}) {
+	constructor(options: HypermediaElectronOptions = {}) {
 		this.options = {
 			debug: false,
 			httpScheme: 'http',
@@ -58,14 +58,14 @@ export class ElectronSSR {
 	 */
 	private log(...args: any[]): void {
 		if (this.options.debug) {
-			console.log('[ElectronSSR]', ...args);
+			console.log('[HypermediaElectron]', ...args);
 		}
 	}
 
 	/**
 	 * Register protocol schemes - MUST be called BEFORE app is ready
 	 */
-	public registerSchemes(customProtocol?: Protocol): ElectronSSR {
+	public registerSchemes(customProtocol?: Protocol): HypermediaElectron {
 		if (this.schemesRegistered) {
 			this.log('Schemes already registered');
 			return this;
@@ -109,7 +109,7 @@ export class ElectronSSR {
 	/**
 	 * Register protocol handlers - MUST be called AFTER app is ready
 	 */
-	public registerHandlers(customProtocol?: Protocol): ElectronSSR {
+	public registerHandlers(customProtocol?: Protocol): HypermediaElectron {
 		if (this.initialized) {
 			this.log('Handlers already registered');
 			return this;
@@ -137,7 +137,7 @@ export class ElectronSSR {
 	/**
 	 * Register a route for HTTP requests
 	 */
-	public registerRoute(path: string, handler: RouteHandler, method: string = 'GET'): ElectronSSR {
+	public registerRoute(path: string, handler: RouteHandler, method: string = 'GET'): HypermediaElectron {
 		const routeKey = `${method.toUpperCase()}:${path}`;
 		this.routes.set(routeKey, handler);
 		this.log(`Registered route: ${routeKey}`);
@@ -147,7 +147,7 @@ export class ElectronSSR {
 	/**
 	 * Broadcast content to all connected SSE clients
 	 */
-	public broadcastContent(eventName: string, content: string): ElectronSSR {
+	public broadcastContent(eventName: string, content: string): HypermediaElectron {
 		if (this._sseConnections.size === 0) {
 			return this;
 		}
@@ -228,74 +228,6 @@ export class ElectronSSR {
 
 		// Return a standard web Response with the stream
 		return new Response(webStream as unknown as BodyInit, { headers });
-	}
-
-	/**
-	 * Create a datastar connection event (required for datastar connections)
-	 */
-	public datastarConnected(): string {
-		return 'event: datastar-connected\ndata: {"status": "connected"}\n\n';
-	}
-
-	/**
-	 * Create a datastar-compatible SSE event for merging signals
-	 */
-	public datastarMergeSignals(signals: Record<string, any>): string {
-		return `event: datastar-merge-signals\ndata: signals ${JSON.stringify(signals)}\n\n`;
-	}
-
-	/**
-	 * Create a datastar-compatible DOM fragment update
-	 */
-	public datastarMergeFragments(selector: string, html: string, mergeMode: string = 'inner'): string {
-		return [
-			'event: datastar-merge-fragments',
-			`data: selector ${selector}`,
-			`data: mergeMode ${mergeMode}`,
-			`data: fragments ${html.replace(/\n/g, '')}`
-		].join('\n') + '\n\n';
-	}
-
-	/**
-	 * Create a datastar-compatible script execution event
-	 */
-	public datastarExecuteScript(script: string, autoRemove: boolean = true): string {
-		// Split the script into lines for proper formatting
-		const scriptLines = script.trim().split('\n');
-
-		let output = 'event: datastar-execute-script\n';
-		output += `data: autoRemove ${autoRemove}\n`;
-
-		// Add each line of the script with 'data: script ' prefix
-		for (const line of scriptLines) {
-			output += `data: script ${line.trim()}\n`;
-		}
-
-		// End with double newline
-		output += '\n';
-
-		return output;
-	}
-
-	/**
-	 * Create a datastar-compatible SSE event for removing signals
-	 */
-	public datastarRemoveSignals(paths: string | string[]): string {
-		const pathsArray = Array.isArray(paths) ? paths : [paths];
-		return [
-			'event: datastar-remove-signals',
-			...pathsArray.map(path => `data: paths ${path}`)
-		].join('\n') + '\n\n';
-	}
-
-	/**
-	 * Create a datastar-compatible SSE event for removing fragments
-	 */
-	public datastarRemoveFragments(selector: string): string {
-		return [
-			'event: datastar-remove-fragments',
-			`data: selector ${selector}`
-		].join('\n') + '\n\n';
 	}
 
 	/**

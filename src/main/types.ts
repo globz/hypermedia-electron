@@ -2,15 +2,15 @@ import { Protocol } from 'electron';
 import { PassThrough } from 'stream';
 
 /**
- * Options for configuring ElectronSSR
+ * Options for configuring HypermediaElectron
  */
-export interface ElectronSSROptions {
-        /** Enable debug logging */
-        debug?: boolean;
-        /** Custom HTTP scheme (default: 'http') */
-        httpScheme?: string;
-        /** Custom SSE scheme (default: 'sse') */
-        sseScheme?: string;
+export interface HypermediaElectronOptions {
+	/** Enable debug logging */
+	debug?: boolean;
+	/** Custom HTTP scheme (default: 'http') */
+	httpScheme?: string;
+	/** Custom SSE scheme (default: 'sse') */
+	sseScheme?: string;
 }
 
 /**
@@ -27,6 +27,6 @@ export type ActionHandler = (request: Request, url: URL, body: any) => Promise<R
  * SSE Connection interface
  */
 export interface SSEConnection {
-        stream: PassThrough;
-        request: Request;
+	stream: PassThrough;
+	request: Request;
 } 

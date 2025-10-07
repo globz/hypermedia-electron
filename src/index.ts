@@ -1,16 +1,16 @@
-import { ElectronSSR } from './main/ElectronSSR';
+import { HypermediaElectron } from './main/HypermediaElectron';
 
-export { ElectronSSR };
+export { HypermediaElectron };
 export * from './main/types';
 
 /**
- * Factory function to create an ElectronSSR instance
+ * Factory function to create an HypermediaElectron instance
  */
 export function createSSR(options = {}) {
-  return new ElectronSSR(options);
+	return new HypermediaElectron(options);
 }
 
 export default {
-  ElectronSSR,
-  createSSR
+	HypermediaElectron,
+	createSSR
 }; 

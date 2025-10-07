@@ -1,6 +1,6 @@
 {
   "name": "hypermedia-electron",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Hypermedia for Electron ~ Built for SSR and htmx",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
