@@ -1,12 +1,58 @@
-* Dev dependencies
+* hypermedia-electron
 
+  Turn your main process into a virtual server which handles HTTP-like
+  requests and Server-Sent Events.
+
+  You may now easily do server-side rendering and make use of htmx to its full
+  potential!
+
+  No running server or port opening required and no need to manually handle IPC
+  communication.
+
+  This package is heavily inspired by https://github.com/StreamUI/ssr-electron
+
+  I do not wish to publish this on npm since the original solution already
+  exist. This is simply my own private package for personal use with some
+  added modifications.
+
+* Dev dependencies
+  
+#+begin_src bash
   pnpm add -D typescript vite vite-plugin-dts @types/node electron
+#+end_src
 
 * Build
-
+  
+#+begin_src bash
   pnpm build
+#+end_src
+
+* Update package
+
+  > Make your change
+  > update package.json version
+  pnpm build
+  > In your project using hypermedia-electron
+  pnpm remove hypermedia-electron
+  pnpm add /path/to/hypermedia-electron-X.X.X.tgz
 
 * Pack (private distribution)
-
+  
+#+begin_src bash
   pnpm pack
-  pnpm add /path/to/my-custom-package-1.0.0.tgz
+  pnpm add /path/to/hypermedia-electron-X.X.X.tgz
+#+end_src
+
+* Add package
+
+If you wish to add this package to your project do the following:
+
+#+NAME: Build, Package & Add
+#+begin_src bash
+git clone https://github.com/globz/hypermedia-electron.git
+cd hypermedia-electron
+pnpm build
+pnpm pack
+cd /path/to/your/project
+pnpm add /path/to/hypermedia-electron-X.X.X.tgz
+#+end_src
