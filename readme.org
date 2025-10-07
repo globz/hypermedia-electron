@@ -50,7 +50,9 @@ pnpm add /path/to/hypermedia-electron-X.X.X.tgz
   
 #+begin_src bash
 pnpm build
+pnpm pack
 #+end_src
+
   + In your project using hypermedia-electron
 
 #+begin_src bash
