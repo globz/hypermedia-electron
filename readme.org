@@ -21,21 +21,6 @@
   pnpm add -D typescript vite vite-plugin-dts @types/node electron
 #+end_src
 
-* Build
-  
-#+begin_src bash
-  pnpm build
-#+end_src
-
-* Update package
-
-  > Make your change
-  > update package.json version
-  pnpm build
-  > In your project using hypermedia-electron
-  pnpm remove hypermedia-electron
-  pnpm add /path/to/hypermedia-electron-X.X.X.tgz
-
 * Pack (private distribution)
   
 #+begin_src bash
@@ -57,3 +42,22 @@ pnpm pack
 cd /path/to/your/project
 pnpm add /path/to/hypermedia-electron-X.X.X.tgz
 #+end_src
+
+* Update package
+
+  + Make your change
+  + update package.json version
+  
+#+begin_src bash
+pnpm build
+#+end_src
+  + In your project using hypermedia-electron
+
+#+begin_src bash
+pnpm remove hypermedia-electron
+pnpm add /path/to/hypermedia-electron-X.X.X.tgz
+#+end_src
+  
+
+
+
