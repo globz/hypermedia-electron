@@ -1,0 +1,12 @@
+* Dev dependencies
+
+  pnpm add -D typescript vite vite-plugin-dts @types/node electron
+
+* Build
+
+  pnpm build
+
+* Pack (private distribution)
+
+  pnpm pack
+  pnpm add /path/to/my-custom-package-1.0.0.tgz
