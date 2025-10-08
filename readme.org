@@ -86,11 +86,9 @@ const createWindow = () => {
   const mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
-    title: 'SSR HTMX!',
     webPreferences: {
-            preload: path.join(__dirname, 'utils.js'),
-            nodeIntegration: false,
-            contextIsolation: true,
+      nodeIntegration: false,
+      contextIsolation: true,
     },
   });
 
@@ -110,10 +108,10 @@ app.whenReady().then(() => {
   // Register route for the main page
   ssr.registerRoute('/', (request, url) => {
     return new Response(renderMainPage(), {
-            headers: {
-                    'Content-Type': 'text/html',
-                    'Content-Security-Policy': "script-src 'self'"
-            },
+      headers: {
+        'Content-Type': 'text/html',
+        'Content-Security-Policy': "script-src 'self'"
+      },
     });
   });
 
@@ -121,20 +119,20 @@ app.whenReady().then(() => {
   ssr.registerRoute('/system-info', (request, url) => {
     // This data is only available in the main process
     const systemInfo = {
-            platform: process.platform,
-            arch: process.arch,
-            nodeVersion: process.version,
-            chromiumVersion: process.versions.chrome,
-            electronVersion: process.versions.electron,
-            memoryUsage: process.memoryUsage(),
-            cpuUsage: process.cpuUsage(),
-            uptime: process.uptime(),
-            pid: process.pid,
+       platform: process.platform,
+       arch: process.arch,
+       nodeVersion: process.version,
+       chromiumVersion: process.versions.chrome,
+       electronVersion: process.versions.electron,
+       memoryUsage: process.memoryUsage(),
+       cpuUsage: process.cpuUsage(),
+       uptime: process.uptime(),
+       pid: process.pid,
     };
 
     return new Response(renderSystemInfo(systemInfo), {
       headers: {
-              'Content-Type': 'text/html',
+        'Content-Type': 'text/html',
       },
     });
   });
@@ -150,13 +148,13 @@ app.whenReady().then(() => {
      // Use the sendMessage helper to broadcast notification
      // sendMessage("notification", { message, timestamp: Date.now() });
      ssr.broadcastContent(
-      'notification',
-      JSON.stringify({ message, timestamp: Date.now() }),
+       'notification',
+       JSON.stringify({ message, timestamp: Date.now() }),
      );
 
      return new Response(JSON.stringify({ success: true }), {
        headers: {
-               'Content-Type': 'application/json',
+         'Content-Type': 'application/json',
        },
      });
    },
@@ -166,28 +164,28 @@ app.whenReady().then(() => {
   // Register static route for serving css
   ssr.registerRoute('/static/css/index.css', async (request, url) => {
     try {
-            const filePath = path.join(__dirname, './', 'index.css');
-            const fileContent = await fs.readFile(filePath, 'utf-8');
-            return new Response(fileContent, {
-                    headers: { 'Content-Type': 'text/css' },
-            });
+      const filePath = path.join(__dirname, './', 'index.css');
+      const fileContent = await fs.readFile(filePath, 'utf-8');
+      return new Response(fileContent, {
+        headers: { 'Content-Type': 'text/css' },
+      });
     } catch (error) {
-            console.error('Error serving index.css:', error);
-            return new Response('Error loading index.css', { status: 500 });
+        console.error('Error serving index.css:', error);
+        return new Response('Error loading index.css', { status: 500 });
     }
   });
 
   // Register static route for serving htmx.min.js
   ssr.registerRoute('/static/vendor/htmx.min.js', async (request, url) => {
     try {
-            const filePath = path.join(__dirname, './', 'htmx.min.js');
-            const fileContent = await fs.readFile(filePath, 'utf-8');
-            return new Response(fileContent, {
-                    headers: { 'Content-Type': 'application/javascript' },
-            });
+      const filePath = path.join(__dirname, './', 'htmx.min.js');
+      const fileContent = await fs.readFile(filePath, 'utf-8');
+      return new Response(fileContent, {
+        headers: { 'Content-Type': 'application/javascript' },
+      });
     } catch (error) {
-            console.error('Error serving htmx.min.js:', error);
-            return new Response('Error loading HTMX', { status: 500 });
+        console.error('Error serving htmx.min.js:', error);
+        return new Response('Error loading HTMX', { status: 500 });
     }
   });
 
