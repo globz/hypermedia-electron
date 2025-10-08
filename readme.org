@@ -59,7 +59,246 @@ pnpm pack
 pnpm remove hypermedia-electron
 pnpm add /path/to/hypermedia-electron-X.X.X.tgz
 #+end_src
-  
+
+* Example
+
+  Here's a small example on how to integrate hypermedia-electron into your
+  electron project
+
+NAME: main.js
+#+begin_src js
+import { app, BrowserWindow } from 'electron';
+import path from 'node:path';
+import fs from 'node:fs/promises';
+import started from 'electron-squirrel-startup';
+import { createSSR } from 'hypermedia-electron';
+
+// Create the SSR bridge instance - it automatically registers schemes and handlers
+const ssr = createSSR({ debug: true });
+
+// Handle creating/removing shortcuts on Windows when installing/uninstalling.
+if (started) {
+  app.quit();
+}
+
+const createWindow = () => {
+  // Create the browser window.
+  const mainWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    title: 'SSR HTMX!',
+    webPreferences: {
+            preload: path.join(__dirname, 'utils.js'),
+            nodeIntegration: false,
+            contextIsolation: true,
+    },
+  });
+
+  // Optional: Open DevTools for debugging
+  mainWindow.webContents.openDevTools({ mode: 'detach' });
+
+  // Load the app from the virtual URL
+  mainWindow.loadURL('http://localhost/');
+
+  return mainWindow;
+};
+
+// This method will be called when Electron has finished
+// initialization and is ready to create browser windows.
+// Some APIs can only be used after this event occurs.
+app.whenReady().then(() => {
+  // Register route for the main page
+  ssr.registerRoute('/', (request, url) => {
+    return new Response(renderMainPage(), {
+            headers: {
+                    'Content-Type': 'text/html',
+                    'Content-Security-Policy': "script-src 'self'"
+            },
+    });
+  });
+
+  // Register route for system info
+  ssr.registerRoute('/system-info', (request, url) => {
+    // This data is only available in the main process
+    const systemInfo = {
+            platform: process.platform,
+            arch: process.arch,
+            nodeVersion: process.version,
+            chromiumVersion: process.versions.chrome,
+            electronVersion: process.versions.electron,
+            memoryUsage: process.memoryUsage(),
+            cpuUsage: process.cpuUsage(),
+            uptime: process.uptime(),
+            pid: process.pid,
+    };
+
+    return new Response(renderSystemInfo(systemInfo), {
+      headers: {
+              'Content-Type': 'text/html',
+      },
+    });
+  });
+
+  // Setup SSE notification example
+  ssr.registerRoute(
+    '/notify',
+    (request, url) => {
+     const message = url.searchParams.get('message') || 'Hello!';
+
+     console.log('notify', message);
+
+     // Use the sendMessage helper to broadcast notification
+     // sendMessage("notification", { message, timestamp: Date.now() });
+     ssr.broadcastContent(
+      'notification',
+      JSON.stringify({ message, timestamp: Date.now() }),
+     );
+
+     return new Response(JSON.stringify({ success: true }), {
+       headers: {
+               'Content-Type': 'application/json',
+       },
+     });
+   },
+   'POST',
+  );
+
+  // Register static route for serving css
+  ssr.registerRoute('/static/css/index.css', async (request, url) => {
+    try {
+            const filePath = path.join(__dirname, './', 'index.css');
+            const fileContent = await fs.readFile(filePath, 'utf-8');
+            return new Response(fileContent, {
+                    headers: { 'Content-Type': 'text/css' },
+            });
+    } catch (error) {
+            console.error('Error serving index.css:', error);
+            return new Response('Error loading index.css', { status: 500 });
+    }
+  });
+
+  // Register static route for serving htmx.min.js
+  ssr.registerRoute('/static/vendor/htmx.min.js', async (request, url) => {
+    try {
+            const filePath = path.join(__dirname, './', 'htmx.min.js');
+            const fileContent = await fs.readFile(filePath, 'utf-8');
+            return new Response(fileContent, {
+                    headers: { 'Content-Type': 'application/javascript' },
+            });
+    } catch (error) {
+            console.error('Error serving htmx.min.js:', error);
+            return new Response('Error loading HTMX', { status: 500 });
+    }
+  });
+
+  // Create the window
+  createWindow();
+});
+
+function renderMainPage() {
+  return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <title>hypermedia-electron example</title>
+      <link rel="stylesheet" href="/static/css/index.css" />
+      <script src="/static/vendor/htmx.min.js"></script>
+    </head>
+    <body>
+      <h1>hypermedia-electron</h1>
+      
+      <div x-data="{ loading: false }">
+        <button
+          hx-get="/system-info"
+          hx-target="#content"
+          @click="loading = true"
+          @htmx:afterOnLoad="loading = false">
+          Load System Info
+        </button>
+        
+        <button
+          hx-post="/notify?message=HMTX!"
+          hx-swap="none">
+          Send Notification
+        </button>
+      </div>
+      
+      <div id="content">
+        <p>Click the buttons above to interact with the Electron main process:</p>
+        <ul>
+          <li><strong>Load System Info</strong> - Fetch system information from the main process</li>
+          <li><strong>Send Notification</strong> - Broadcast a notification to all connected clients</li>
+        </ul>
+      </div>
+      
+      <div id="notifications"></div>
+
+    </body>
+    </html>
+  `;
+}
+
+function renderSystemInfo(info) {
+  return `
+    <h2>System Information</h2>
+    <div class="info-container">
+      <div class="info-item">
+        <span class="info-label">Platform:</span>
+        <span>${info.platform}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Architecture:</span>
+        <span>${info.arch}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Node.js Version:</span>
+        <span>${info.nodeVersion}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Chromium Version:</span>
+        <span>${info.chromiumVersion}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Electron Version:</span>
+        <span>${info.electronVersion}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Process ID:</span>
+        <span>${info.pid}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Uptime:</span>
+        <span>${Math.round(info.uptime)} seconds</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Memory Usage (RSS):</span>
+        <span>${Math.round(info.memoryUsage.rss / 1024 / 1024)} MB</span>
+      </div>
+    </div>
+    <p><em>This data is fetched directly from the Electron main process using HTMX.</em></p>
+  `;
+}
+
+// Quit when all windows are closed, except on macOS. There, it's common
+// for applications and their menu bar to stay active until the user quits
+// explicitly with Cmd + Q.
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+          app.quit();
+  }
+});
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) createWindow();
+});
+
+app.setAppUserModelId("com.squirrel.MyApp.MyApp");
+
+// In this file you can include the rest of your app's specific main process
+// code. You can also put them in separate files and import them here.
+
+#+end_src  
 
 
 
