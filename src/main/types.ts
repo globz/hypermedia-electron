@@ -16,7 +16,8 @@ export interface HypermediaElectronOptions {
 /**
  * Route handler for handling HTTP requests
  */
-export type RouteHandler = (request: Request, url: URL) => Promise<Response> | Response;
+export type RouteHandler = (request: Request, url: URL, dynamic?: string) => Promise<Response> | Response;
+export type Method = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 
 /**
  * Action handler for processing actions

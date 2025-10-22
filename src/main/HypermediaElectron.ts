@@ -3,6 +3,7 @@ import { PassThrough, Readable } from 'stream';
 import {
 	HypermediaElectronOptions,
 	RouteHandler,
+	Method,
 	SSEConnection
 } from './types';
 
@@ -13,6 +14,7 @@ export class HypermediaElectron {
 	private options: HypermediaElectronOptions;
 	private initialized: boolean = false;
 	private routes: Map<string, RouteHandler> = new Map();
+	private dynamicRoutes: Map<string, { prefix: string; handler: RouteHandler }> = new Map();
 	private _sseConnections: Set<SSEConnection> = new Set();
 	private schemesRegistered: boolean = false;
 
@@ -137,10 +139,26 @@ export class HypermediaElectron {
 	/**
 	 * Register a route for HTTP requests
 	 */
-	public registerRoute(path: string, handler: RouteHandler, method: string = 'GET'): HypermediaElectron {
+	public registerRoute(path: string, handler: RouteHandler, method: Method = 'GET'): HypermediaElectron {
 		const routeKey = `${method.toUpperCase()}:${path}`;
 		this.routes.set(routeKey, handler);
 		this.log(`Registered route: ${routeKey}`);
+		return this;
+	}
+
+	/**
+	 * Register a dynamic route with a catch-all pattern (e.g., /endpoint/*)
+	 */
+	public registerDynamicRoute(path: string, handler: RouteHandler, method: Method = 'GET'): HypermediaElectron {
+		if (!path.endsWith('/*')) {
+			throw new Error('Dynamic routes must end with /* (e.g., /endpoint/*)');
+		}
+
+		const prefix = path.slice(0, -2).replace(/\/+$/, ''); // Remove '/*' and trailing slashes
+		const dynamicKey = `${method.toUpperCase()}:${prefix}:dynamic`;
+
+		this.dynamicRoutes.set(dynamicKey, { prefix, handler });
+		this.log(`Registered dynamic route: ${dynamicKey} (prefix: ${prefix})`);
 		return this;
 	}
 
@@ -174,18 +192,32 @@ export class HypermediaElectron {
 	private async handleHTTP(request: Request): Promise<Response> {
 		const url = new URL(request.url);
 		const method = request.method;
-		const routeKey = `${method}:${url.pathname}`;
+		const pathname = url.pathname.replace(/\/+$/, '') || '/'; // Normalize: strip trailing slashes, default to '/'
 
 		this.log(`HTTP ${method} request for ${url.pathname}`);
 
-		// Check if we have a registered route handler
-		if (this.routes.has(routeKey)) {
+		// Check if we have a registered exact route handler
+		const exactKey = `${method}:${pathname}`;
+		if (this.routes.has(exactKey)) {
 			try {
-				const handler = this.routes.get(routeKey)!;
+				const handler = this.routes.get(exactKey)!;
 				return await handler(request, url);
 			} catch (error) {
 				this.log('Error handling route:', error);
 				return new Response(`Server Error: ${(error as Error).message}`, { status: 500 });
+			}
+		}
+
+		// Check for dynamic routes
+		for (const [dynamicKey, { prefix, handler }] of this.dynamicRoutes.entries()) {
+			if (dynamicKey.startsWith(`${method}:`) && (pathname === prefix || pathname.startsWith(prefix + '/'))) {
+				try {
+					const dynamicPath = pathname === prefix ? '' : pathname.slice(prefix.length + 1); // Extract part after prefix
+					return await handler(request, url, dynamicPath);
+				} catch (error) {
+					this.log(`Error handling dynamic route ${prefix}:`, error);
+					return new Response(`Server Error: ${(error as Error).message}`, { status: 500 });
+				}
 			}
 		}
 
