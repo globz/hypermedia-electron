@@ -196,7 +196,7 @@ export class HypermediaElectron {
 
 		this.log(`HTTP ${method} request for ${url.pathname}`);
 
-		// Check if we have a registered exact route handler
+		// Check if we have a registered route handler for exact match routes
 		const exactKey = `${method}:${pathname}`;
 		if (this.routes.has(exactKey)) {
 			try {
@@ -208,7 +208,7 @@ export class HypermediaElectron {
 			}
 		}
 
-		// Check for dynamic routes
+		// Check if we have a registered route handler for dynamic routes
 		for (const [dynamicKey, { prefix, handler }] of this.dynamicRoutes.entries()) {
 			if (dynamicKey.startsWith(`${method}:`) && (pathname === prefix || pathname.startsWith(prefix + '/'))) {
 				try {
